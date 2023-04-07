@@ -7,10 +7,13 @@ import {
   TextField,
   Typography,
 } from "@material-ui/core";
+
+import { useDropzone } from "react-dropzone";
 import { makeStyles, ThemeProvider } from "@material-ui/styles";
+import { DeleteForever } from "@material-ui/icons";
 
 import TemplateDefault from "../../src/templates/Default";
-import { DeleteForever } from "@material-ui/icons";
+import { useState } from "react";
 
 const useStyles = makeStyles((theme) => ({
   mask: {},
@@ -27,6 +30,7 @@ const useStyles = makeStyles((theme) => ({
   },
   thumbsContainer: {
     display: "flex",
+    flexWrap: "wrap",
     marginTop: 15,
   },
   dropzone: {
@@ -47,6 +51,7 @@ const useStyles = makeStyles((theme) => ({
     height: 150,
     backgroundSize: "cover",
     backgroundPosition: "center, center",
+    margin: "0 15px 15px 0",
 
     "& $mainImage": {
       backgroundColor: "black",
@@ -73,6 +78,26 @@ const useStyles = makeStyles((theme) => ({
 
 const Publish = () => {
   const classes = useStyles();
+  const [files, setFiles] = useState([]);
+
+  const { getRootProps, getInputProps } = useDropzone({
+    accept: "image/*",
+    onDrop: (acceptedFile) => {
+      const newFiles = acceptedFile.map((file) => {
+        return Object.assign(file, {
+          preview: URL.createObjectURL(file),
+        });
+      });
+
+      setFiles([...files, ...newFiles]);
+    },
+  });
+
+  const handleRemoveFile = (fileName) => {
+    const newFileState = files.filter((file) => file.name !== fileName);
+
+    setFiles(newFileState);
+  };
 
   return (
     <TemplateDefault>
@@ -146,28 +171,38 @@ const Publish = () => {
             A primeira imagem é a foto principal do seu anúncio.
           </Typography>
           <Box className={classes.thumbsContainer}>
-            <Box className={classes.dropzone}>
+            <Box className={classes.dropzone} {...getRootProps()}>
+              <input {...getInputProps()} />
               <Typography variant="body2" color="textPrimary">
                 Clique para adicionar ou arraste a imagem para aqui
               </Typography>
             </Box>
-            <Box
-              className={classes.thumb}
-              style={{
-                backgroundImage: "url(https://source.unsplash.com/random)",
-              }}
-            >
-              <Box className={classes.mainImage}>
-                <Typography variant="body" color="secondary">
-                  Principal
-                </Typography>
+
+            {files.map((file, index) => (
+              <Box
+                className={classes.thumb}
+                style={{
+                  backgroundImage: `url(${file.preview})`,
+                }}
+                key={file.name}
+              >
+                {index === 0 && (
+                  <Box className={classes.mainImage}>
+                    <Typography variant="body" color="secondary">
+                      Principal
+                    </Typography>
+                  </Box>
+                )}
+                <Box className={classes.mask}>
+                  <IconButton
+                    color="secondary"
+                    onClick={() => handleRemoveFile(file.name)}
+                  >
+                    <DeleteForever fontSize="large" />
+                  </IconButton>
+                </Box>
               </Box>
-              <Box className={classes.mask}>
-                <IconButton color="secondary">
-                  <DeleteForever fontSize="large" />
-                </IconButton>
-              </Box>
-            </Box>
+            ))}
           </Box>
         </Box>
       </Container>
