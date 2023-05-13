@@ -9,9 +9,7 @@ import {
   InputAdornment,
   InputLabel,
   MenuItem,
-  OutlinedInput,
   Select,
-  TextField,
   Typography,
 } from "@material-ui/core";
 
@@ -82,8 +80,8 @@ const useStyles = makeStyles((theme) => ({
   },
   inputLabel: {
     fontWeight: 400,
-    color: theme.palette.primary.main
-  }
+    color: theme.palette.primary.main,
+  },
 }));
 
 const validationSchema = yup.object().shape({
@@ -92,37 +90,29 @@ const validationSchema = yup.object().shape({
     .min(6, "Escreva um título maior")
     .max(100, "Título muito grande")
     .required("Campo obrigatório"),
-  category: yup.string().required('Campo obrigatório'),
+  category: yup.string().required("Campo obrigatório"),
   description: yup
     .string()
-    .min(50, "Escreva um título maior")
+    .min(50, "Escreva uma descrição maior")
+    .required("Campo obrigatório"),
+  price: yup.number().required("Campo obrigatório"),
+  email: yup
+    .string()
+    .email("Digite um e-mail válido")
+    .required("Campo obrigatório"),
+  name: yup.string().required("Campo obrigatório"),
+  phone: yup
+    .number()
+    .required("Campo obrigatório")
+    .typeError("Digite um número válido"),
+  files: yup
+    .array()
+    .min(1, "Envie pelo menos 1 foto")
     .required("Campo obrigatório"),
 });
 
 const Publish = () => {
   const classes = useStyles();
-  const [files, setFiles] = useState([]);
-
-  const { getRootProps, getInputProps } = useDropzone({
-    accept: {
-      "image/*": [".jpeg", ".png"],
-    },
-    onDrop: (acceptedFile) => {
-      const newFiles = acceptedFile.map((file) => {
-        return Object.assign(file, {
-          preview: URL.createObjectURL(file),
-        });
-      });
-
-      setFiles([...files, ...newFiles]);
-    },
-  });
-
-  const handleRemoveFile = (fileName) => {
-    const newFileState = files.filter((file) => file.name !== fileName);
-
-    setFiles(newFileState);
-  };
 
   return (
     <TemplateDefault>
@@ -130,14 +120,41 @@ const Publish = () => {
         initialValues={{
           title: "",
           category: "",
-          description: ""
+          description: "",
+          price: "",
+          email: "",
+          name: "",
+          phone: "",
+          files: [],
         }}
         validationSchema={validationSchema}
-        onSubmit={() => {
+        onSubmit={(values) => {
           console.log("ok, enviou", values);
         }}
       >
-        {({ values, errors, handleChange, handleSubmit }) => {
+        {({touched, values, errors, handleChange, handleSubmit, setFieldValue }) => {
+          // eslint-disable-next-line react-hooks/rules-of-hooks
+          const { getRootProps, getInputProps } = useDropzone({
+            accept: {
+              "image/*": [".jpeg", ".png"],
+            },
+            onDrop: (acceptedFile) => {
+              const newFiles = acceptedFile.map((file) => {
+                return Object.assign(file, {
+                  preview: URL.createObjectURL(file),
+                });
+              });
+
+              setFieldValue("files", [...values.files, ...newFiles]);
+            },
+          });
+
+          const handleRemoveFile = (fileName) => {
+            const newFileState = values.files.filter((file) => file.name !== fileName);
+
+            setFieldValue("files", newFileState);
+          };
+
           return (
             <form onSubmit={handleSubmit}>
               <Container maxWidth="sm">
@@ -162,22 +179,25 @@ const Publish = () => {
               <br />
               <Container maxWidth="md" className={classes.boxContainer}>
                 <Box className={classes.box}>
-                  <FormControl error={errors.title} fullWidth>
-                    <InputLabel className={classes.inputLabel}>Título do Anúncio</InputLabel>
-                    <InputLabel>ex.: Bicicleta Aro 18 com garantia</InputLabel>
+                  <FormControl error={errors.title && touched.title} fullWidth>
+                    <InputLabel className={classes.inputLabel}>
+                      Título do Anúncio
+                    </InputLabel>
+                    {/* <InputLabel>ex.: Bicicleta Aro 18 com garantia</InputLabel> */}
                     <Input
                       name="title"
                       value={values.title}
                       onChange={handleChange}
+                      placeholder="ex.: Bicicleta Aro 18 com garantia"
                     />
-                    <FormHelperText >
-                      {errors.title}
-                    </FormHelperText>
+                    <FormHelperText>{errors.title && touched.title ? errors.title : null}</FormHelperText>
                   </FormControl>
                   <br />
                   <br />
-                  <FormControl error={errors.category} fullWidth>
-                  <InputLabel className={classes.inputLabel}>Categoria</InputLabel>
+                  <FormControl error={errors.category && touched.category} fullWidth>
+                    <InputLabel className={classes.inputLabel}>
+                      Categoria
+                    </InputLabel>
                     <Select
                       name="category"
                       value={values.category}
@@ -187,47 +207,62 @@ const Publish = () => {
                       <MenuItem value="Bebê e Criança">Bebê e Criança</MenuItem>
                       <MenuItem value="Agricultura">Agricultura</MenuItem>
                       <MenuItem value="Moda">Moda</MenuItem>
-                      <MenuItem value="Carros, Motos e Barcos">Carros, Motos e Barcos</MenuItem>
+                      <MenuItem value="Carros, Motos e Barcos">
+                        Carros, Motos e Barcos
+                      </MenuItem>
                       <MenuItem value="Serviços">Serviços</MenuItem>
                       <MenuItem value="Lazer">Lazer</MenuItem>
                       <MenuItem value="Animais">Animais</MenuItem>
-                      <MenuItem value="Moveis, Casa e Jardim">Moveis, Casa e Jardim</MenuItem>
+                      <MenuItem value="Moveis, Casa e Jardim">
+                        Moveis, Casa e Jardim
+                      </MenuItem>
                       <MenuItem value="Imóveis">Imóveis</MenuItem>
-                      <MenuItem value="Equipamentos e Ferramentas">Equipamentos e Ferramentas</MenuItem>
-                      <MenuItem value="Celulares e Tablets">Celulares e Tablets</MenuItem>
+                      <MenuItem value="Equipamentos e Ferramentas">
+                        Equipamentos e Ferramentas
+                      </MenuItem>
+                      <MenuItem value="Celulares e Tablets">
+                        Celulares e Tablets
+                      </MenuItem>
                       <MenuItem value="Esportes">Esportes</MenuItem>
                       <MenuItem value="Tecnologia">Tecnologia</MenuItem>
                       <MenuItem value="Emprego">Emprego</MenuItem>
                       <MenuItem value="Outros">Outros</MenuItem>
                     </Select>
-                    <FormHelperText >
-                      {errors.category}
-                    </FormHelperText>
+                    <FormHelperText>{errors.category && touched.category ? errors.category : null}</FormHelperText>
                   </FormControl>
                 </Box>
               </Container>
 
               <Container maxWidth="md" className={classes.boxContainer}>
                 <Box className={classes.box}>
-                  <Typography component="h6" variant="h6" color="textPrimary">
+                  <Typography
+                    component="h6"
+                    variant="h6"
+                    color={errors.files && touched.files ? "error" : "textPrimary"}
+                  >
                     Imagens
                   </Typography>
                   <Typography
                     component="div"
                     variant="body2"
-                    color="textPrimary"
+                    color={errors.files && touched.files ? "error" : "textPrimary"}
                   >
                     A primeira imagem é a foto principal do seu anúncio.
                   </Typography>
+                  {errors.files && touched.files ? (
+                    <Typography variant="body2" color="error" gutterBottom>
+                      {errors.files}
+                    </Typography>
+                  ) : null}
                   <Box className={classes.thumbsContainer}>
                     <Box className={classes.dropzone} {...getRootProps()}>
-                      <input {...getInputProps()} />
-                      <Typography variant="body2" color="textPrimary">
+                      <input name="files" {...getInputProps()} />
+                      <Typography variant="body2"  color={errors.files && touched.files ? "error" : "textPrimary"}>
                         Clique para adicionar ou arraste a imagem para aqui
                       </Typography>
                     </Box>
 
-                    {files.map((file, index) => (
+                    {values.files.map((file, index) => (
                       <Box
                         className={classes.thumb}
                         style={{
@@ -258,36 +293,37 @@ const Publish = () => {
 
               <Container maxWidth="md" className={classes.boxContainer}>
                 <Box className={classes.box}>
-                  <FormControl error={errors.description} fullWidth>
-                    <InputLabel className={classes.inputLabel}>Escreva os detalhes do que esté vendendo.</InputLabel>
+                  <FormControl error={errors.description && touched.description} fullWidth>
+                    <InputLabel className={classes.inputLabel}>
+                      Escreva os detalhes do que esté vendendo.
+                    </InputLabel>
                     <Input
                       name="description"
                       multiline
                       minRows={6}
                       variant="outlined"
+                      onChange={handleChange}
                     />
-                    <FormHelperText >
-                      {errors.description}
-                    </FormHelperText>
+                    <FormHelperText>{errors.description && touched.description ? errors.description : null}</FormHelperText>
                   </FormControl>
                 </Box>
               </Container>
 
               <Container maxWidth="md" className={classes.boxContainer}>
                 <Box className={classes.box}>
-                  <Typography component="h6" variant="h6" color="textPrimary">
-                    Preço
-                  </Typography>
-                  <br />
-                  <FormControl fullWidth variant="outlined">
-                    <InputLabel>Valor</InputLabel>
-                    <OutlinedInput
-                      onChange={() => {}}
+                  <FormControl error={errors.price && touched.price} fullWidth>
+                    <InputLabel className={classes.inputLabel}>
+                      Preço de venda
+                    </InputLabel>
+                    <Input
+                      name="price"
+                      variant="outlined"
+                      onChange={handleChange}
                       startAdornment={
                         <InputAdornment position="start">R$</InputAdornment>
                       }
-                      labelWidth={40}
                     />
+                    <FormHelperText>{errors.price && touched.price ? errors.price : null}</FormHelperText>
                   </FormControl>
                 </Box>
               </Container>
@@ -302,28 +338,42 @@ const Publish = () => {
                   >
                     Dados de Contato
                   </Typography>
-                  <TextField
-                    label="Nome"
-                    variant="outlined"
-                    size="small"
-                    fullWidth
-                  />
+
+                  <FormControl error={errors.name && touched.name} fullWidth>
+                    <InputLabel className={classes.inputLabel}>Nome</InputLabel>
+                    <Input
+                      name="name"
+                      value={values.name}
+                      onChange={handleChange}
+                    />
+                    <FormHelperText>{errors.name && touched.name ? errors.name : null}</FormHelperText>
+                  </FormControl>
                   <br />
                   <br />
-                  <TextField
-                    label="E-mail"
-                    variant="outlined"
-                    size="small"
-                    fullWidth
-                  />
+                  <FormControl error={errors.email && touched.email} fullWidth>
+                    <InputLabel className={classes.inputLabel}>
+                      E-mail
+                    </InputLabel>
+                    <Input
+                      name="email"
+                      value={values.email}
+                      onChange={handleChange}
+                    />
+                    <FormHelperText>{errors.email && touched.email ? errors.email : null}</FormHelperText>
+                  </FormControl>
                   <br />
                   <br />
-                  <TextField
-                    label="Telefone"
-                    variant="outlined"
-                    size="small"
-                    fullWidth
-                  />
+                  <FormControl error={errors.phone && touched.phone} fullWidth>
+                    <InputLabel className={classes.inputLabel}>
+                      Telefone
+                    </InputLabel>
+                    <Input
+                      name="phone"
+                      value={values.phone}
+                      onChange={handleChange}
+                    />
+                    <FormHelperText>{errors.phone && touched.phone ? errors.phone : null}</FormHelperText>
+                  </FormControl>
                 </Box>
               </Container>
 
